@@ -13,31 +13,29 @@ const char *thread_state_name(thread_state s) {
   }
 }
 
-Thread::Thread(Kernel &k, const char *name) :
+Thread::Thread() :
   Timer(),
-  kernel(k),
-  continuation(0),
-  state(INIT_STATE),
-  wakeup_reason(WAKEUP_OK),
 #if defined(PTK_DEBUG)
   file(""),
-  line(0),
+  line(0)
 #endif
-  name(name)
+  continuation(0),
+  state(INIT_STATE),
+  wakeup_reason(WAKEUP_OK)
 {
-  kernel.register_thread(*this);
+  register_thread(*this);
 }
 
 Thread::~Thread() {
-  kernel.unregister_thread(*this);
+  unregister_thread(*this);
 }
 
 void Thread::timer_expired() {
-  kernel.lock_from_isr();
+  lock_from_isr();
   wakeup_reason = WAKEUP_TIMEOUT;
   timer_expiration = TIME_EXPIRED;
-  kernel.schedule(*this);
-  kernel.unlock_from_isr();
+  schedule_thread(*this);
+  unlock_from_isr();
 }
 
 void Thread::ptk_end() {
@@ -45,8 +43,7 @@ void Thread::ptk_end() {
   continuation = 0;
 }
 
-SubThread::SubThread(Kernel &k, const char *name) :
-  Thread(k, name),
+SubThread::SubThread() :
   parent(0)
 {
 }
@@ -59,9 +56,9 @@ void SubThread::reset() {
 void SubThread::ptk_end() {
   Thread::ptk_end();
   if (parent != 0) {
-    kernel.lock();
-    kernel.wakeup(*parent, WAKEUP_SUBTHREAD_DONE);
+    lock_kernel();
+    wakeup_thread(*parent, WAKEUP_SUBTHREAD_DONE);
     parent = 0;
-    kernel.unlock();
+    unlock_kernel();
   }
 }

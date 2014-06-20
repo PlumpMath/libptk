@@ -52,23 +52,22 @@ namespace ptk {
     DLink<Thread> ready_link;
 
   protected:
-    Kernel &kernel;
     virtual void run() = 0;
     virtual void timer_expired();
     virtual void ptk_end();
-
-    void *continuation;
-    thread_state state;
-    wakeup_t wakeup_reason;
 
 #if defined(PTK_DEBUG)
     const char *file;
     int line;
 #endif
 
+    void *continuation;
+    thread_state state;
+    wakeup_t wakeup_reason;
+
+
   public:
-    const char * const name;
-    Thread(Kernel &k, const char *name);
+    Thread();
     virtual ~Thread();
   };
 
@@ -82,7 +81,7 @@ namespace ptk {
     virtual void ptk_end();
 
   public:
-    SubThread(Kernel &k, const char *name);
+    SubThread();
   };
 
 #if defined(PTK_DEBUG)
