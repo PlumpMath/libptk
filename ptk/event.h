@@ -11,6 +11,7 @@ namespace ptk {
 
     DQueue<Thread> waiting;
   public:
+    eventmask_t mask;
   Event() : waiting(&Thread::ready_link) {}
   };
 }
