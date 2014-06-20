@@ -46,5 +46,85 @@ namespace ptk {
     void unlock();
     void dump();
   };
+
+  extern Kernel *the_kernel;
+
+  inline void register_thread(Thread &t) {
+    the_kernel->register_thread(t);
+  }
+
+  inline void unregister_thread(Thread &t) {
+    the_kernel->unregister_thread(t);
+  }
+
+  inline void arm_timer(Timer &t, ptk_time_t when) {
+    the_kernel->arm_timer(t, when);
+  }
+
+  inline void disarm_timer(Timer &t) {
+    the_kernel->disarm_timer(t);
+  }
+
+  inline bool timer_is_armed(const Timer &t) {
+    return the_kernel->timer_is_armed(t);
+  }
+
+  inline void schedule_thread(Thread &t) {
+    the_kernel->schedule(t);
+  }
+
+  inline void unschedule_thread(Thread &t) {
+    the_kernel->unschedule(t);
+  }
+
+  inline void wait_subthread(Thread &parent, SubThread &sub, ptk_time_t duration) {
+    the_kernel->wait_subthread(parent, sub, duration);
+  }
+
+  inline void wakeup_thread(Thread &t, wakeup_t reason) {
+    the_kernel->wakeup(t, reason);
+  }
+
+  inline void enter_isr() {
+    the_kernel->enter_isr();
+  }
+
+  inline void lock_from_isr() {
+    the_kernel->lock_from_isr();
+  }
+
+  inline void unlock_from_isr() {
+    the_kernel->unlock_from_isr();
+  }
+
+  inline void leave_isr() {
+    the_kernel->leave_isr();
+  }
+
+  inline void wait_event(Thread &t, Event &e, ptk_time_t duration) {
+    the_kernel->wait_event(t, e, duration);
+  }
+
+  inline void signal_event(Event &e, eventmask_t mask) {
+    the_kernel->signal_event(e, mask);
+  }
+
+  inline void broadcast_event(Event &e, eventmask_t mask) {
+    the_kernel->broadcast_event(e, mask);
+  }
+
+  inline void lock_kernel() {
+    the_kernel->lock();
+  }
+
+  inline void unlock_kernel() {
+    the_kernel->unlock();
+  }
+
+  inline void dump_kernel() {
+    the_kernel->dump();
+  }
+    
 }
+
 

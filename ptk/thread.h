@@ -110,57 +110,57 @@ namespace ptk {
                                                      
 #define PTK_SLEEP(duration)                         \
   do {                                              \
-    kernel.lock();                                  \
+    lock_kernel();                                  \
     state = SLEEPING_STATE;                         \
-    kernel.unschedule(*this);                       \
-    kernel.arm_timer(*this, (duration));            \
+    unschedule_thread(*this);                       \
+    arm_timer(*this, (duration));                   \
     continuation = &&PTK_HERE;                      \
     PTK_DEBUG_SAVE();                               \
-    kernel.unlock();                                \
+    unlock_kernel();                                \
     return;                                         \
   PTK_HERE: ;                                       \
   } while (0)                                        
                                                      
 #define PTK_WAIT_EVENT(event,duration)              \
   do {                                              \
-    kernel.wait_event(*this, event, duration);      \
+    wait_event(*this, event, duration);             \
     continuation = &&PTK_HERE;                      \
     PTK_DEBUG_SAVE();                               \
     state = WAIT_EVENT_STATE;                       \
     return;                                         \
   PTK_HERE: ;                                       \
-    kernel.lock();                                  \
-    kernel.disarm_timer(*this);                     \
-    kernel.unlock();                                \
+    lock_kernel();                                  \
+    disarm_timer(*this);                            \
+    unlock_kernel();                                \
   } while(0)
 
 #define PTK_UNLOCK_WAIT_EVENT(event,duration)       \
   do {                                              \
-    kernel.wait_event(*this, event, duration);      \
+    wait_event(*this, event, duration);             \
     continuation = &&PTK_HERE;                      \
     PTK_DEBUG_SAVE();                               \
     state = WAIT_EVENT_STATE;                       \
-    kernel.unlock();                                \
+    unlock_kernel();                                \
     return;                                         \
   PTK_HERE: ;                                       \
-    kernel.lock();                                  \
-    kernel.disarm_timer(*this);                     \
-    kernel.unlock();                                \
+    lock_kernel();                                  \
+    disarm_timer(*this);                            \
+    unlock_kernel();                                \
   } while(0)
 
 #define PTK_WAIT_SUBTHREAD(sub,duration)            \
   do {                                              \
-    kernel.lock();                                  \
-    kernel.wait_subthread(*this, sub, duration);    \
+    lock_kernel();                                  \
+    wait_subthread(*this, sub, duration);           \
     continuation = &&PTK_HERE;                      \
     PTK_DEBUG_SAVE();                               \
     state = WAIT_SUBTHREAD_STATE;                   \
-    kernel.unlock();                                \
+    unlock_kernel();                                \
     return;                                         \
   PTK_HERE: ;                                       \
-    kernel.lock();                                  \
-    kernel.disarm_timer(*this);                     \
-    kernel.unlock();                                \
+    lock_kernel();                                  \
+    disarm_timer(*this);                            \
+    unlock_kernel();                                \
   } while(0)
 
 #define PTK_WAIT_UNTIL(condition,duration)          \
@@ -177,16 +177,16 @@ namespace ptk {
     } else {                                        \
       if (!(condition)) {                           \
         if (timer_expiration == TIME_NEVER) {       \
-          kernel.lock();                            \
-          kernel.arm_timer(*this, duration_temp);   \
-          kernel.unlock();                          \
+          lock_kernel();                            \
+          arm_timer(*this, duration_temp);          \
+          unlock_kernel();                          \
         }                                           \
         state = WAITING_STATE;                      \
         return;                                     \
       } else {                                      \
-        kernel.lock();                              \
-        kernel.disarm_timer(*this);                 \
-        kernel.unlock();                            \
+        lock_kernel();                              \
+        disarm_timer(*this);                        \
+        unlock_kernel();                            \
       }                                             \
     }                                               \
   } while (0)

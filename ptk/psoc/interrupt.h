@@ -23,13 +23,11 @@ namespace ptk {
     };
 
     class InterruptEvent : public Interrupt, public Event {
-      Kernel &kernel;
-
     protected:
       virtual void isr_hook();
 
     public:
-      InterruptEvent(Kernel &k, uint8_t number, uint8_t prio);
+      InterruptEvent(uint8_t number, uint8_t prio);
       
       eventmask_t mask;
       virtual void isr() final;

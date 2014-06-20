@@ -15,6 +15,8 @@ using namespace ptk;
 #define PTK_PORT_ENABLE_INTERRUPS while (0) {}
 #endif
 
+Kernel *ptk::the_kernel = 0;
+
 Kernel::Kernel() :
 ready_list(&Thread::ready_link),
   armed_timers(&Timer::timer_link),

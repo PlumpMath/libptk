@@ -133,22 +133,21 @@ void Interrupt::set_pending(bool value) {
   }
 }
 
-InterruptEvent::InterruptEvent(Kernel &k, uint8_t number, uint8_t prio) :
+InterruptEvent::InterruptEvent(uint8_t number, uint8_t prio) :
   Interrupt(number, prio),
-  Event(),
-  kernel(k)
+  Event()
 {
 }
 
 void InterruptEvent::isr() {
-  kernel.enter_isr();
+  enter_isr();
 
   isr_hook();
 
-  kernel.lock_from_isr();
-  kernel.broadcast_event(*this, mask);
-  kernel.unlock_from_isr();
-  kernel.leave_isr();
+  lock_from_isr();
+  broadcast_event(*this, mask);
+  unlock_from_isr();
+  leave_isr();
 }
 
 void InterruptEvent::isr_hook() {
