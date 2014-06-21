@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ptk/kernel.h"
 #include "ptk/thread.h"
 
 namespace ptk {
   typedef int32_t eventmask_t;
+  class Thread;
 
   class Event {
-    friend class Kernel;
+    friend class ptk::Kernel;
 
     DQueue<Thread> waiting;
   public:

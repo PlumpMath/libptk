@@ -6,6 +6,7 @@
 
 namespace ptk {
   class Thread;
+  class Event;
 
   class Kernel {
   protected:
