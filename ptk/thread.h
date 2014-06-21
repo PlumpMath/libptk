@@ -162,6 +162,20 @@ namespace ptk {
     unlock_kernel();                                \
   } while(0)
 
+#define PTK_UNLOCK_WAIT_SUBTHREAD(sub,duration)     \
+  do {                                              \
+    wait_subthread(*this, sub, duration);           \
+    continuation = &&PTK_HERE;                      \
+    PTK_DEBUG_SAVE();                               \
+    state = WAIT_SUBTHREAD_STATE;                   \
+    unlock_kernel();                                \
+    return;                                         \
+  PTK_HERE: ;                                       \
+    lock_kernel();                                  \
+    disarm_timer(*this);                            \
+    unlock_kernel();                                \
+  } while(0)
+
 #define PTK_WAIT_UNTIL(condition,duration)          \
   do {                                              \
   PTK_HERE: ;                                       \
