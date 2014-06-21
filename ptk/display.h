@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ptk/thread.h"
+#include "ptk/event.h"
+
 #include <stdint.h>
 
 namespace ptk {
@@ -14,15 +16,15 @@ namespace ptk {
   };
 
   class DisplayIO : public SubThread {
-  SubThread &send_thread;
-  const uint8_t *buffer, *buffer0;
+    Event &send_complete;
+    const uint8_t *buffer, *buffer0;
 
   protected:
     virtual void send_data(const uint8_t *src, unsigned len) = 0;
     virtual void signal_pin(logical_pin_t pin, bool value) = 0;
 
   public:
-    DisplayIO(SubThread &sender);
+    DisplayIO(Event &send_complete);
     void interpret(const uint8_t *cmds);
     virtual void run();
 

@@ -3,6 +3,12 @@
 
 using namespace ptk;
 
+DisplayIO::DisplayIO(Event &evt) :
+  SubThread(),
+  send_complete(evt)
+{
+}
+
 void DisplayIO::interpret(const uint8_t *cmds) {
   buffer = cmds;
 }
@@ -19,7 +25,7 @@ void DisplayIO::run() {
     if (buffer0 < buffer) {
       // send non-escaped bytes as is
       send_data(buffer0, (buffer - buffer0));
-      PTK_WAIT_SUBTHREAD(send_thread, TIME_INFINITE);
+      PTK_UNLOCK_WAIT_EVENT(send_complete, TIME_INFINITE);
 
       // note that buffer has already been incremented to the
       // next escape code
@@ -58,7 +64,7 @@ void DisplayIO::run() {
       signal_pin(DC_PIN, true);
       send_data(buffer, len);
       buffer += len;
-      PTK_WAIT_SUBTHREAD(send_thread, TIME_INFINITE);
+      PTK_UNLOCK_WAIT_EVENT(send_complete, TIME_INFINITE);
       break;
     }
 
@@ -75,7 +81,7 @@ void DisplayIO::run() {
       // buffer has already been incremented, so subtract one to get a
       // pointer to the ESC byte (which is what we need to send).
       send_data(buffer-1, 1);
-      PTK_WAIT_SUBTHREAD(send_thread, TIME_INFINITE);
+      PTK_UNLOCK_WAIT_EVENT(send_complete, TIME_INFINITE);
       break;
 
     default :
