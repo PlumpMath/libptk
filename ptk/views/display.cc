@@ -1,7 +1,8 @@
-#include "ptk/display.h"
+#include "ptk/views/display.h"
 #include "ptk/kernel.h"
 
 using namespace ptk;
+using namespace ptk::views;
 
 IO::IO() :
   SubThread()
@@ -90,7 +91,7 @@ void IO::run() {
   PTK_END();
 }
 
-SSD1306_128x32::SSD1306_128x32(ptk::IO &io) :
+SSD1306_128x32::SSD1306_128x32(ptk::views::IO &io) :
   akt::views::Canvas(akt::views::Size(W, H)),
   io(io)
 {
