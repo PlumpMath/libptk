@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ptk/thread.h"
+#include "ptk/event.h"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -37,6 +40,26 @@ namespace ptk {
 
       uint8_t status();
       uint8_t prepare(const void *src, volatile void *dst, size_t len);
+    };
+
+    class DMATransfer : public SubThread {
+    protected:
+      SimpleDMA dma;
+      Event &done;
+      virtual void run();
+
+    public:
+      DMATransfer(Event &done);
+      uint8_t init(uint8_t channel,
+                   uint8_t priority,
+                   uint8_t burst_size,
+                   bool    request_per_burst,
+                   uint8_t out0_sel,
+                   uint8_t out1_sel,
+                   uint8_t out_en,
+                   uint8_t in_sel,
+                   dma_type_t type);
+      SubThread &prepare(const void *src, volatile void *dst, unsigned len);
     };
   }
 }

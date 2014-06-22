@@ -1,9 +1,11 @@
+#include "ptk/ptk.h"
 #include "ptk/psoc/dma.h"
 
 extern "C" {
 #include "CyDmac.h"
 }
 
+using namespace ptk;
 using namespace ptk::psoc;
 
 SimpleDMA::SimpleDMA() :
@@ -89,4 +91,40 @@ uint8_t SimpleDMA::enable() {
 
 uint8_t SimpleDMA::disable() {
   return CyDmaChDisable(ch);
+}
+
+DMATransfer::DMATransfer(Event &done) :
+  SubThread(),
+  dma(),
+  done(done)
+{
+}
+
+uint8_t DMATransfer::init(uint8_t channel,
+                          uint8_t priority,
+                          uint8_t burst_size,
+                          bool    request_per_burst,
+                          uint8_t out0_sel,
+                          uint8_t out1_sel,
+                          uint8_t out_en,
+                          uint8_t in_sel,
+                          dma_type_t type)
+{
+  return dma.init(channel, priority, burst_size, request_per_burst,
+                  out0_sel, out1_sel, out_en, in_sel, type);
+}
+
+SubThread &DMATransfer::prepare(const void *src, volatile void *dst, unsigned len) {
+  dma.prepare(src, dst, len);
+  return *this;
+}
+
+void DMATransfer::run() {
+  PTK_BEGIN();
+  //done.set_enable(true);
+  lock_kernel();
+  dma.enable();
+  PTK_UNLOCK_WAIT_EVENT(done, TIME_INFINITE);
+  //done.set_enable(false);
+  PTK_END();
 }
