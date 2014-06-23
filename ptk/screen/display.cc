@@ -91,10 +91,12 @@ void IO::run() {
   PTK_END();
 }
 
-SSD1306_128x32::SSD1306_128x32(ptk::screen::IO &io) :
-  akt::views::Canvas(akt::views::Size(W, H)),
-  io(io)
+SSD1306_128x32::FrameBuffer::FrameBuffer() :
+  Canvas(Size(W, H))
 {
+}
+
+void SSD1306_128x32::FrameBuffer::reset() {
   uint8_t count=0;
 
   for (unsigned page=0; page < H/8; ++page) {
@@ -104,16 +106,7 @@ SSD1306_128x32::SSD1306_128x32(ptk::screen::IO &io) :
   }
 }
 
-void SSD1306_128x32::reset() {
-  for (;;);
-}
-
-void SSD1306_128x32::flush(const akt::views::Rect &r) {
-  flush_rect = r;
-  signal_event(redraw, 0);
-}
-
-void SSD1306_128x32::set_pixel(akt::views::Point p, akt::views::pixel value) {
+void SSD1306_128x32::FrameBuffer::set_pixel(Point p, pixel value) {
   assert(p.x >= 0 && p.x < (int16_t) W);
   assert(p.y >= 0 && p.y < (int16_t) H);
 
@@ -126,13 +119,29 @@ void SSD1306_128x32::set_pixel(akt::views::Point p, akt::views::pixel value) {
   }
 }
 
-akt::views::pixel SSD1306_128x32::get_pixel(akt::views::Point p) const {
+pixel SSD1306_128x32::FrameBuffer::get_pixel(Point p) const {
   assert(p.x >= 0 && p.x < (int16_t) W);
   assert(p.y >= 0 && p.y < (int16_t) H);
 
   uint8_t mask = 0x01 << (p.y % 8);
 
   return (pages[p.y/8][p.x] & mask) ? 1 : 0;
+}
+
+SSD1306_128x32::SSD1306_128x32(IO &io) :
+  Screen(framebuffer),
+  framebuffer(),
+  io(io)
+{
+}
+
+void SSD1306_128x32::init() {
+  io.init();
+}
+
+void SSD1306_128x32::reset() {
+  framebuffer.reset();
+  frame = framebuffer.bounds;
 }
 
 static const uint8_t reset_sequence[] = {
@@ -166,8 +175,8 @@ static const uint8_t framebuffer_prologue[] = {
   DISPLAY_IO_COMMANDS,
   DISPLAY_IO_SELECT,
 
-  0x21, 0, 127,     // set column start=0, end=127
-  0x22, 0, (SSD1306_128x32::H/8)-1, // set page start=0, end=H/8
+  0x21, 0, 127,        // set column start=0, end=SSD1306_128x32::FrameBuffer::W
+  0x22, 0, 3,          // set page start=0, end=SSD1306_128x32::FrameBuffer::H/8-1
 
   DISPLAY_IO_DATA(0),  // setup for framebuffer DMA
   DISPLAY_IO_END
@@ -181,15 +190,31 @@ static const uint8_t framebuffer_epilogue[] = {
 void SSD1306_128x32::run() {
   PTK_BEGIN();
 
-  io.init();
+  // reset device
+  reset();
   PTK_WAIT_SUBTHREAD(io.interpret(reset_sequence), TIME_INFINITE);
 
-  for (;;) {
-    PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_prologue), TIME_INFINITE);
-    PTK_WAIT_SUBTHREAD(io.send_data((const uint8_t *) pages, sizeof(pages)), TIME_INFINITE);
-    PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_epilogue), TIME_INFINITE);
+  // clear the screen
+  PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_prologue), TIME_INFINITE);
+  PTK_WAIT_SUBTHREAD(io.send_data((const uint8_t *) framebuffer.pages,
+                                  sizeof(framebuffer.pages)), TIME_INFINITE);
+  PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_epilogue), TIME_INFINITE);
 
-    PTK_WAIT_EVENT(redraw, TIME_INFINITE);
+  for (;;) {
+    PTK_SLEEP(100);
+    if (is_dirty) {
+      // redraw everything into the framebuffer
+      draw_all();
+
+      is_dirty = false;
+      dirty_rect = Rect(0, 0, 0, 0);
+
+      // copy bits in framebuffer to device
+      PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_prologue), TIME_INFINITE);
+      PTK_WAIT_SUBTHREAD(io.send_data((const uint8_t *) framebuffer.pages,
+                                      sizeof(framebuffer.pages)), TIME_INFINITE);
+      PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_epilogue), TIME_INFINITE);
+    }
   }
 
   PTK_END();

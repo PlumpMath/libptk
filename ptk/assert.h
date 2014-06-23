@@ -9,3 +9,8 @@ void ptk_assert_failure(const char *msg, const char *file, int line);
   do {                                                          \
     if (!(cond)) PTK_ASSERT_FAILURE(msg, __FILE__, __LINE__);   \
   } while (0)
+
+#define assert(cond)                                            \
+  do {                                                          \
+    if (!(cond)) PTK_ASSERT_FAILURE(#cond, __FILE__, __LINE__); \
+  } while (0)

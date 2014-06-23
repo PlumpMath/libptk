@@ -2,7 +2,9 @@
 
 #include "ptk/thread.h"
 #include "ptk/event.h"
-#include "akt/views/views.h"
+#include "ptk/screen/types.h"
+#include "ptk/screen/canvas.h"
+#include "ptk/screen/view.h"
 
 #include <stdint.h>
 
@@ -57,22 +59,24 @@ namespace ptk {
 
 namespace ptk {
   namespace screen {
-    class SSD1306_128x32 : public akt::views::Canvas, public SubThread {
-    public:
-      enum {W=128, H=32};
-      Event redraw;
-      SSD1306_128x32(ptk::screen::IO &io);
+    class SSD1306_128x32 : public Screen {
+      struct FrameBuffer : public Canvas {
+        enum {W=128, H=32};
+        uint8_t pages[H/8][W];
 
-      virtual void flush(const akt::views::Rect &r);
+        FrameBuffer();
+        virtual void set_pixel(Point p, pixel value);
+        virtual pixel get_pixel(Point p) const;
+        virtual void reset();
+      } framebuffer;
+
+    public:
+      SSD1306_128x32(IO &io);
+      virtual void init();
       virtual void reset();
 
     protected:
-      uint8_t pages[H/8][W];
-      ptk::screen::IO &io;
-      akt::views::Rect flush_rect;
-
-      virtual void set_pixel(akt::views::Point p, akt::views::pixel value);
-      virtual akt::views::pixel get_pixel(akt::views::Point p) const;
+      IO &io;
       virtual void run();
     };
   }
