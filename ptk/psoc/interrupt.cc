@@ -50,7 +50,7 @@ enum {
 
 Interrupt *psoc_interrupts[MAX_INTERRUPTS];
 
-// define a hook function to call each intterupt's isr() method
+// define a hook function to call each interupt's isr() method
 #define INTERRUPT(n) void irq_hook##n() { if (psoc_interrupts[n]) psoc_interrupts[n]->isr(); }
 INTERRUPTS
 #undef INTERRUPT
@@ -61,6 +61,7 @@ cyisraddress const psoc_interrupt_hooks[MAX_INTERRUPTS] = {
 INTERRUPTS
 #undef INTERRUPT
 };
+
 
 static reg8 *nvic_priority_register(uint8_t interrupt_number) {
   // the first priority register is at CYREG_NVIC_PRI_0, and the addresses
