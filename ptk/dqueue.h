@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ptk/assert.h"
 #include <iterator>
 
 namespace ptk {
@@ -118,6 +119,16 @@ namespace ptk {
 
       // element is no longer in the queue
       (element.*member).prev = (element.*member).next = 0;
+
+      if ((this->prev == this->next) && (this->prev != 0)) {
+        (this->prev->*member).prev = 0;
+        (this->prev->*member).next = 0;
+      }
+
+      PTK_ASSERT(!((this->prev == this->next) && (this->prev != 0)) ||
+                 ((this->prev->*member).prev == 0 &&
+                  (this->prev->*member).next == 0),
+                 "remove() leaves bad pointers behind");
 
       return *this;
     }
