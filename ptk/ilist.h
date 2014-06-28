@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ptk/assert.h"
+// #include "ptk/assert.h"
 #include <cstddef>
 
 /*
@@ -93,11 +93,17 @@ namespace ptk {
    */
   template<typename T>
   class I2List  {
+    friend class Iterator;
+
     I2Link *ring;
     const size_t offset;
 
     I2Link &link(T &element) const {
       return *(I2Link *)(offset + (char *) &element);
+    }
+
+    T &element(const I2Link &l) const {
+      return *(T *)(((char *) &l) - offset);
     }
 
   public:
@@ -106,12 +112,40 @@ namespace ptk {
       offset((size_t) &(static_cast<T*>(0)->*member))
     {}
 
-    void add(T &element) {
+    bool empty() const {
+      return ring == 0;
+    }
+
+    // add at the front
+    void push(T &elt) {
+      if (ring) link(elt).join_left_of(*ring);
+      ring = &link(elt);
+    }
+
+    // add at the back
+    void push_back(T &elt) {
       if (ring) {
-        link(element).join_left_of(*ring);
+        link(elt).join_left_of(*ring);
       } else {
-        ring = &link(element);
+        ring = &link(elt);
       }
+    }
+
+    // remove from the front
+    T *pop() {
+      if (empty()) return 0;
+
+      T *value = &element(*ring);
+
+      if (ring->is_joined()) {
+        I2Link *first_link = ring;
+        ring = first_link->right;
+        first_link->leave();
+      } else {
+        ring = 0;
+      }
+
+      return value;
     }
 
     void remove(T &element) {
@@ -129,42 +163,48 @@ namespace ptk {
     }
 
     class Iterator {
-      I2Link *current;
-      I2Link *limit;
-      size_t offset;
+      I2List &list;
+      I2Link *last, *current, *limit;
+
+      T *deref() const { return (T *)(((char *) current) - list.offset); }
 
     public:
-      Iterator(I2Link *c, size_t o) :
-        current(c),
-        limit(0),
-        offset(o)
+      Iterator(I2List &l) :
+        list(l),
+        last(0),
+        current(list.ring),
+        limit(0)
       {
       }
 
-      T &operator* ()       { return *(T *)(((char *) current) - offset); }
-      const T &operator* () const { return  operator*(); }
-      T *operator->()       { return &operator*(); }
-      const T *operator->() const { return &operator*(); }
+      T *operator()()       { return deref(); }
+      const T *operator()() const { return deref(); }
+      T &operator* ()       { return *deref(); }
+      const T &operator* () const { return  *deref(); }
+      T *operator->()       { return deref(); }
+      const T *operator->() const { return deref(); }
 
       bool more() const {
         return current && (current != limit);
       }
 
-      Iterator &operator++() {
-        if (!limit) limit = current;
+      void next() {
+        last = current;
         current = current->right;
-        return *this;
+        if (limit == 0) limit = last;
       }
 
-      Iterator &operator--() {
-        if (!limit) limit = current;
-        current = current->left;
-        return *this;
+      void remove() {
+        last = current;
+        current = current->right;
+
+        if (!current->is_joined()) current = 0;
+        list.remove(list.element(*last));
       }
     };
 
     Iterator iter() {
-      return Iterator(ring, offset);
+      return Iterator(*this);
     }
   };
 }
