@@ -48,8 +48,8 @@ namespace ptk {
     friend class Semaphore;
     friend class Event;
 
-    DLink<Thread> registry_link;
-    DLink<Thread> ready_link;
+    i2link_t registry_link;
+    i2link_t ready_link;
 
   protected:
     virtual void run() = 0;

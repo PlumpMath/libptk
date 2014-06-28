@@ -11,9 +11,9 @@ namespace ptk {
 
   class Kernel {
   protected:
-    DQueue<Thread> ready_list;
+    I2List<Thread> ready_list;
     I2List<Timer> armed_timers;
-    DQueue<Thread> thread_registry;
+    I2List<Thread> thread_registry;
     Thread *active_thread;
     volatile int16_t isr_depth;
     volatile int16_t lock_depth;

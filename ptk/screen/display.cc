@@ -201,7 +201,7 @@ void SSD1306_128x32::run() {
   PTK_WAIT_SUBTHREAD(io.interpret(framebuffer_epilogue), TIME_INFINITE);
 
   for (;;) {
-    PTK_SLEEP(50);
+    PTK_SLEEP(100);
     if (is_dirty) {
       // redraw everything into the framebuffer
       draw_all();

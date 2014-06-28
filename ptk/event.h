@@ -9,7 +9,8 @@ namespace ptk {
   class Event {
     friend class ptk::Kernel;
 
-    DQueue<Thread> waiting;
+    I2List<Thread> waiting;
+
   public:
     eventmask_t mask;
   Event() : waiting(&Thread::ready_link) {}

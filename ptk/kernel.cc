@@ -38,14 +38,14 @@ void Kernel::schedule(Thread &t) {
   PTK_ASSERT(lock_depth > 0,
              "Kernel must be locked to schedule a thread.");
   // add t to the end of the ready list
-  ready_list.insert_after(t);
+  ready_list.push_back(t);
 }
 
 void Kernel::wakeup(Thread &t, wakeup_t reason) {
   PTK_ASSERT(lock_depth > 0,
              "Kernel must be locked to wakeup a thread.");
   t.wakeup_reason = reason;
-  ready_list.insert_after(t);
+  ready_list.push_back(t);
 }
 
 void Kernel::wait_subthread(Thread &parent, SubThread &sub, ptk_time_t duration) {
@@ -185,20 +185,18 @@ void Kernel::wait_event(Thread &thread, Event &event, ptk_time_t duration) {
   lock();
   if (duration != TIME_INFINITE) arm_timer(thread, duration);
   unschedule(thread);
-  event.waiting.insert_before(thread);
+  event.waiting.push_back(thread);
   unlock();
 }
 
 void Kernel::signal_event(Event &event, eventmask_t mask) {
   PTK_ASSERT(lock_depth > 0,
              "Kernel must be locked to signal an event.");
- 
-  if (!event.waiting.empty()) {
-    Thread &thread(event.waiting.front());
 
-    event.waiting.pop();
-    thread.wakeup_reason |= mask;
-    schedule(thread);
+  Thread *thread;
+  if ((thread = event.waiting.pop())) {
+    thread->wakeup_reason |= mask;
+    schedule(*thread);
   }
 }
 
@@ -206,29 +204,27 @@ void Kernel::broadcast_event(Event &event, eventmask_t mask) {
   PTK_ASSERT(lock_depth > 0,
              "Kernel must be locked to broadcast an event.");
 
-  while (!event.waiting.empty()) {
-    Thread &thread(event.waiting.front());
-
-    event.waiting.pop();
-    thread.wakeup_reason |= mask;
-    schedule(thread);
+  Thread *thread;
+  while ((thread = event.waiting.pop())) {
+    thread->wakeup_reason |= mask;
+    schedule(*thread);
   }
 }
 
 bool Kernel::run_once() {
-  if (!ready_list.empty()) {
-    lock();
-    active_thread = &ready_list.front();
-    ready_list.pop();
-    unlock();
+  lock();
+  active_thread = ready_list.pop();
+  unlock();
 
+  if (active_thread) {
     active_thread->run();
 
     lock();
     if (active_thread->state & RUNNABLE_STATES) schedule(*active_thread);
     active_thread = 0;
     unlock();
+    return true;
+  } else {
+    return false;
   }
-
-  return !ready_list.empty();
 }
