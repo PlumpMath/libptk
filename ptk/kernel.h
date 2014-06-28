@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ptk/dqueue.h"
+#include "ptk/ilist.h"
 #include "ptk/timer.h"
 #include "ptk/event.h"
 
@@ -11,7 +12,7 @@ namespace ptk {
   class Kernel {
   protected:
     DQueue<Thread> ready_list;
-    DQueue<Timer> armed_timers;
+    I2List<Timer> armed_timers;
     DQueue<Thread> thread_registry;
     Thread *active_thread;
     volatile int16_t isr_depth;

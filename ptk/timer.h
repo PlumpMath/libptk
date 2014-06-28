@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ptk/assert.h"
-#include "ptk/dqueue.h"
+#include "ptk/ilist.h"
+#include <stdint.h>
 
 namespace ptk {
   class Kernel;
@@ -23,7 +24,7 @@ namespace ptk {
   class Timer {
     friend class Kernel;
     virtual void timer_expired() = 0;
-    ptk::DLink<Timer> timer_link;
+    ptk::i2link_t timer_link;
 
   protected:
     ptk_time_t timer_expiration;

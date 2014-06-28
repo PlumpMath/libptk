@@ -137,7 +137,7 @@ void Kernel::arm_timer(Timer &t, ptk_time_t when) {
   PTK_ASSERT(t.timer_expiration == TIME_NEVER,
              "Attempt to arm a Timer that is already armed.");
   t.timer_expiration = when;
-  armed_timers.insert_after(t);
+  armed_timers.push(t);
 }
 
 void Kernel::disarm_timer(Timer &t) {
@@ -146,14 +146,14 @@ void Kernel::disarm_timer(Timer &t) {
 }
 
 void Kernel::expire_timers(uint32_t time_delta) {
-  DQueue<Timer> expired(&Timer::timer_link);
+  I2List<Timer> expired(&Timer::timer_link);
 
   // phase 1: find the timers that have expired
   lock_from_isr();
-  for (auto i = armed_timers.begin(); i != armed_timers.end();) {
+  for (auto i = armed_timers.iter(); i.more();) {
     // Extract the Timer pointer from the iterator before (possibly) removing
     // the timer from the queue. This avoids screwing up iterator.
-    Timer *t = *i++;
+    Timer *t = &*i;
 
     if (t->timer_expiration <= time_delta) {
       // We want to tell the timer how much time has elapsed since it's
@@ -161,22 +161,23 @@ void Kernel::expire_timers(uint32_t time_delta) {
       // so we can't simply subtract the time_delta and save the result.
       // Instead, we'll save (time_delta-now), which will be non-negative.
       t->timer_expiration = time_delta - t->timer_expiration;
-
-      armed_timers.remove(*t);
+      i.remove();
       expired.push(*t);
     } else if (t->timer_expiration < TIME_INFINITE) {
       t->timer_expiration -= time_delta;
+      i.next();
     }
   }
   unlock_from_isr();
 
   // phase 2: call timer_expired() on each
-  while (!expired.empty()) {
-    Timer &t(expired.front());
+  Timer *t;
 
-    t.timer_expired();
-    t.timer_expiration = TIME_NEVER;
-    expired.pop();
+  int loop_count = 0;
+  while ((t = expired.pop())) {
+    t->timer_expired();
+    t->timer_expiration = TIME_NEVER;
+    loop_count += 1;
   }
 }
 
