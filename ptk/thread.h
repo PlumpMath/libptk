@@ -184,7 +184,7 @@ namespace ptk {
     PTK_DEBUG_SAVE();                               \
     if (duration_temp == TIME_INFINITE) {           \
       if (!(condition)) {                           \
-        state = WAITING_STATE;                      \
+        state = WAIT_COND_STATE;                    \
         return;                                     \
       }                                             \
     } else {                                        \
@@ -194,7 +194,7 @@ namespace ptk {
           arm_timer(*this, duration_temp);          \
           unlock_kernel();                          \
         }                                           \
-        state = WAITING_STATE;                      \
+        state = WAIT_COND_STATE;                    \
         return;                                     \
       } else {                                      \
         lock_kernel();                              \
