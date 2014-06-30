@@ -22,19 +22,12 @@ namespace ptk {
       read_position(s)
     {}
 
-    void flush() {
+    void reset() {
       write_position = read_position = storage;
     }
 
+    // number of contiguous elements that can read
     size_t read_capacity() const {
-      if (write_position >= read_position) {
-        return (size_t) (write_position - read_position);
-      } else {
-        return (size_t) ((limit - read_position) + (write_position - storage));
-      }
-    }
-
-    size_t contiguous_read_capacity() const {
       if (write_position >= read_position) {
         return (size_t) (write_position - read_position);
       } else {
@@ -42,14 +35,16 @@ namespace ptk {
       }
     }
 
+    // number of contiguous elements that can be written
     size_t write_capacity() const {
       if (write_position >= read_position) {
-        return (size_t) (((limit - storage) - 1) - (write_position - read_position));
+        return (size_t) (limit - write_position);
       } else {
         return (size_t) ((read_position - write_position) - 1);
       }
     }
 
+    // try to read n elements. actual number may be less
     size_t read(T *dst, size_t n) {
       size_t actually_read = 0;
 
@@ -75,34 +70,29 @@ namespace ptk {
       return actually_read;
     }
 
-    inline T &peek(int offset) const {
-      ptrdiff_t capacity = limit - storage;
-      assert(abs(offset) < capacity);
-      T *p = read_position + offset;
-      if (p < storage) p += capacity;
-      if (p >= limit) p -= capacity;
-      return *p;
-    }
-
-    void skip(uint32_t offset) {
-      size_t cap = read_capacity();
-
-      if (offset > cap) offset = cap;
-
+    // adjust internal state as if offset elements had actually been read
+    void fake_read(uint32_t offset) {
+      assert(offset <= read_capacity());
       read_position += offset;
-      if (read_position >= limit) read_position -= (limit - storage);
+      if (read_position == limit) read_position = storage;
     }
 
-    inline T &poke(int offset) const {
-      ptrdiff_t capacity = limit - storage;
-      assert(abs(offset) < capacity);
-      if (offset < 0) offset += capacity;
-      T *p = write_position + offset;
-      if (p >= limit) p -= capacity;
-      if (p < storage) p += capacity;
-      return *p;
+    // lvalue of elements to be read, where peek(0) is the first unread element
+    // in the buffer, and peek(1) is the second, etc.
+    inline T &peek(int offset) const {
+      assert((offset < 0) || (offset < (int) read_capacity()));
+      T *rp = read_position + offset;
+
+      if (rp >= limit) {
+        rp -= (limit - storage);
+      } else if (rp <  storage) {
+        rp += (limit - storage);
+      }
+
+      return *rp;
     }
 
+    // try to write n elements. actual number may be less
     size_t write(const T *src, size_t n) {
       size_t written = 0;
 
@@ -126,6 +116,28 @@ namespace ptk {
       };
 
       return written;
+    }
+
+    // move internal pointers as if offset elements had actually been written
+    void fake_write(uint32_t offset) {
+      assert(offset <= write_capacity());
+      write_position += offset;
+      if (write_position == limit) write_position = storage;
+    }
+
+    // lvalue of elements to be written, where poke(0) is the next element to
+    // be written and poke(-1) is the last element written.
+    inline T &poke(int offset) const {
+      assert((offset >= 0) || (offset < (int) write_capacity()));
+      T *wp = write_position + offset;
+
+      if (wp >= limit) {
+        wp -= (limit - storage);
+      } else if (wp <  storage) {
+        wp += (limit - storage);
+      }
+
+      return *wp;
     }
   };
 
