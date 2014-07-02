@@ -9,7 +9,9 @@ extern "C" {
 
 namespace ptk {
   namespace psoc {
-    class USBInEndpoint : public ptk::DeviceInput<64> {
+    class USBInEndpoint : public ptk::DeviceInputBase {
+      uint8_t fifo_storage[64];
+
     public:
       uint8_t ep;
 
@@ -18,7 +20,8 @@ namespace ptk {
       virtual void device_read_isr();
     };
 
-    class USBOutEndpoint : public ptk::DeviceOutput<64> {
+    class USBOutEndpoint : public ptk::DeviceOutputBase {
+      uint8_t fifo_storage[64];
 
     public:
       uint8_t ep;

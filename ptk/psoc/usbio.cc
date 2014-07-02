@@ -79,7 +79,9 @@ void usbfs_reset_isr() {
 
 #endif // defined(_USB_NAME_)
 
-USBInEndpoint::USBInEndpoint() {
+USBInEndpoint::USBInEndpoint() :
+  DeviceInputBase(fifo_storage, sizeof(fifo_storage))
+{
 }
 
 unsigned USBInEndpoint::read(uint8_t *buffer, unsigned max) {
@@ -133,7 +135,9 @@ void USBInEndpoint::device_read_isr() {
   // assume unlock_from_isr() will be called
 }
 
-USBOutEndpoint::USBOutEndpoint() {
+USBOutEndpoint::USBOutEndpoint() :
+  DeviceOutputBase(fifo_storage, sizeof(fifo_storage))
+{
 }
 
 unsigned USBOutEndpoint::write(const uint8_t *buffer, const unsigned len0) {
