@@ -18,6 +18,88 @@
  * the same time.
  */
 namespace ptk {
+  struct I1Link {
+    I1Link *next;
+
+    I1Link() : next(0) { }
+  };
+
+  typedef I1Link i1link_t;
+
+  template<typename T>
+  class I1List  {
+    friend class Iterator;
+
+    I1Link *head;
+    const size_t offset;
+
+    I1Link &link(T &element) const {
+      return *(I1Link *)(offset + (char *) &element);
+    }
+
+    T &element(const I1Link &l) const {
+      return *(T *)(((char *) &l) - offset);
+    }
+
+  public:
+    I1List(I1Link T::*member) :
+      head(0),
+      offset((size_t) &(static_cast<T*>(0)->*member))
+    {}
+
+    bool empty() const {
+      return head == 0;
+    }
+
+    // add at the front
+    void push(T &elt) {
+      if (head) link(elt).next = head;
+      head = &link(elt);
+    }
+
+    // remove from the front
+    T *pop() {
+      if (empty()) return 0;
+
+      T *value = &element(*head);
+      head = link(*value).next;
+      return value;
+    }
+
+    class Iterator {
+      I1List &list;
+      I1Link *current;
+
+      T *deref() const { return (T *)(((char *) current) - list.offset); }
+
+    public:
+      Iterator(I1List &l) :
+        list(l),
+        current(list.head)
+      {
+      }
+
+      T *operator()()       { return deref(); }
+      const T *operator()() const { return deref(); }
+      T &operator* ()       { return *deref(); }
+      const T &operator* () const { return  *deref(); }
+      T *operator->()       { return deref(); }
+      const T *operator->() const { return deref(); }
+
+      bool more() const {
+        return current != 0;
+      }
+
+      void next() {
+        current = current->next;
+      }
+    };
+
+    Iterator iter() {
+      return Iterator(*this);
+    }
+  };
+
   /**
    * @class I2Link
    * @brief Generic double-link class holding two pointers
