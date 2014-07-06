@@ -2,3 +2,4 @@
 #include "ptk/thread.cc"
 #include "ptk/timer.cc"
 #include "ptk/io.cc"
+#include "ptk/shell.cc"
