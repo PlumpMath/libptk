@@ -57,6 +57,15 @@ namespace ptk {
       virtual unsigned write(const uint8_t *buffer, unsigned len);
     };
 
+    struct CDCDriver {
+      PSoCUSBInStream in;
+      PSoCUSBOutStream out;
+
+      void init();
+      bool is_enumerated();
+      void init_cdc();
+    };
+
     class PSoCEcho : public Thread {
       PSoCUSBInStream rx;
       PSoCUSBOutStream tx;

@@ -157,23 +157,31 @@ unsigned PSoCUSBOutStream::write(const uint8_t *buffer, const unsigned len0) {
   lock_kernel();
   bool save_unwritten_data = true;
 
+  // if the fifo already has data in it, the new data has to wait
   if (fifo.read_capacity() > 0) {
-    // put the new data behind the old
-    fifo.write(buffer, len);
+    unsigned saved = fifo.write(buffer, len);
 
-    buffer = &fifo.peek(0);
-    len = fifo.read_capacity();
+    // if the fifo didn't have room, say how much was left over
+    if (saved < len) {
+      return saved;
+    } else {
+      buffer = &fifo.peek(0);
+      len = fifo.read_capacity();
 
-    // if there's data left over later, remember that it's already saved
-    save_unwritten_data = false;
+      // if there's data left over later, remember that it's already saved
+      save_unwritten_data = false;
+    }
   }
 
-  if (USB_(_GetEPState)(ep_id) == USB_(_IN_BUFFER_EMPTY)) {
+  uint8_t usb_state;
+  if ((usb_state = USB_(_GetEPState)(ep_id)) == USB_(_IN_BUFFER_EMPTY)) {
     // send as much as we can
     unsigned bytes_to_copy = min(get_max_buffer_size(), len);
     USB_(_LoadInEP)(ep_id, buffer, bytes_to_copy);
     buffer += bytes_to_copy;
     len -= bytes_to_copy;
+  } else {
+    bool usb_is_busy = true;
   }
 
   if ((len > 0) && save_unwritten_data) {
@@ -250,4 +258,18 @@ void PSoCEcho::run() {
   PTK_WAIT_SUBTHREAD(echo, TIME_INFINITE);
   PTK_END();
 }
+
+void CDCDriver::init() {
+  init_usb_driver();
+}
+
+bool CDCDriver::is_enumerated() {
+  return usb_is_enumerated();
+}
+
+void CDCDriver::init_cdc() {
+  in.init(get_usb_cdc_output_endpoint());
+  out.init(get_usb_cdc_input_endpoint());
+}
+
 #endif // defined(_USB_NAME_)

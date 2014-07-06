@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstdarg>
 
 // Declarations
 
@@ -14,9 +15,14 @@ namespace ptk {
     virtual bool get(uint8_t &ch) = 0;
   };
 
-  struct OutStream {
+  class OutStream {
+    void vprintf(const char *fmt, va_list args);
+
+  public:
     virtual size_t write(const uint8_t *buffer, size_t len) = 0;
     virtual bool put(uint8_t ch) = 0;
+    bool puts(const char *str);
+    void printf(const char *fmt, ...);
   };
 
   class DeviceInStream : public InStream {
