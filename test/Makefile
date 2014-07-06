@@ -23,7 +23,7 @@ OBJECTS                  = $(addprefix $(OBJ)/, $(C_SRC:.c=.o) $(CXX_SRC:.cc=.o)
 CFLAGS                  += -I$(GTEST)/include
 CFLAGS                  += -I$(GTEST)
 CFLAGS                  += -I$(LIBPTK)
-CFLAGS                  += -g3
+CFLAGS                  += -ggdb
 CFLAGS                  += -Wall
 
 CXXFLAGS                += -std=c++11
