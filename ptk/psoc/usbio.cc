@@ -181,7 +181,7 @@ unsigned PSoCUSBOutStream::write(const uint8_t *buffer, const unsigned len0) {
     buffer += bytes_to_copy;
     len -= bytes_to_copy;
   } else {
-    bool usb_is_busy = true;
+    //bool usb_is_busy = true;
   }
 
   if ((len > 0) && save_unwritten_data) {
