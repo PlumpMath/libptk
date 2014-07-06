@@ -49,22 +49,25 @@ namespace ptk {
       size_t actually_read = 0;
 
       while (n > 0) {
-        size_t run;
-
-        if (write_position >= read_position) {
-          run = write_position - read_position;
-        } else {
-          run = limit - read_position;
-        }
+        size_t run = read_capacity();
 
         if (run == 0) break;
         if (n < run) run = n;
 
         for(uint32_t i=run; i > 0; --i) *dst++ = *read_position++;
-        if (read_position == limit) read_position = storage;
-
         n -= run;
         actually_read += run;
+
+        if (read_position == write_position) {
+          // FIFO is empty, so reset everything
+          read_position = write_position = storage;
+        } else if (read_position == limit) {
+          // wrap the read pointer
+          read_position = storage;
+        } else if (write_position == limit) {
+          // FIFO was at capacity before the read, but has room now
+          write_position = storage;
+        }
       };
 
       return actually_read;
@@ -97,22 +100,22 @@ namespace ptk {
       size_t written = 0;
 
       while (n > 0) {
-        size_t run;
-
-        if (write_position >= read_position) {
-          run = limit - write_position;
-        } else {
-          run = (read_position - write_position) - 1;
-        }
+        size_t run = write_capacity();
 
         if (run == 0) break;
         if (n < run) run = n;
 
         for (uint32_t i=run; i > 0; --i) *write_position++ = *src++;
-        if (write_position == limit) write_position = storage;
-
         n -= run;
         written += run;
+
+        if (write_position == limit) {
+          if (read_position > storage) {
+            write_position = storage;
+          } else {
+            break;
+          }
+        }
       };
 
       return written;
