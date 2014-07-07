@@ -211,36 +211,6 @@ void PSoCUSBOutStream::transfer() {
   // assume unlock_from_isr() will be called
 }
 
-#if 0
-USBEcho::USBEcho() {
-}
-
-void USBEcho::run() {
-  PTK_BEGIN();
-
-  init_usb_device();
-  // wait until it's enumerated on the USB bus
-  PTK_WAIT_UNTIL(is_enumerated(), TIME_INFINITE);
-  init_cdc();
-
-  rx.init(USB_(_cdc_data_out_ep));
-  tx.init(USB_(_cdc_data_in_ep));
-
-  while (1) {
-    PTK_WAIT_EVENT(rx.not_empty, TIME_INFINITE);
-
-    unsigned bytes_copied;
-    do {
-      uint8_t buf[8];
-
-      bytes_copied = rx.read(buf, sizeof(buf));
-      tx.write(buf, bytes_copied);
-    } while (bytes_copied > 0);
-  }
-  PTK_END();
-}
-#endif
-
 PSoCEcho::PSoCEcho() :
   echo(rx, tx)
 { }

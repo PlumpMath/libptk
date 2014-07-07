@@ -75,19 +75,6 @@ namespace ptk {
       PSoCEcho();
       virtual void run();
     };
-
-#if 0
-    class USBEcho : public ptk::Thread {
-    public:
-      PSoCUSBInStream rx;
-      PSoCUSBOutStream tx;
-
-      USBEcho();
-      virtual void run();
-    };
-
-    extern USBEcho usb_echo;
-#endif
   }
 }
 
