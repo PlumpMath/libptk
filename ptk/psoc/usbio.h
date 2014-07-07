@@ -40,7 +40,7 @@ namespace ptk {
     };
 
     class PSoCUSBInStream : public PSoCUSBEndpoint, public DeviceInStream {
-      uint8_t fifo_storage[64];
+      uint8_t fifo_storage[16];
       virtual void transfer() override;
 
     public:
@@ -49,7 +49,7 @@ namespace ptk {
     };
 
     class PSoCUSBOutStream : public PSoCUSBEndpoint, public DeviceOutStream {
-      uint8_t fifo_storage[64];
+      uint8_t fifo_storage[128];
       virtual void transfer() override;
 
     public:
