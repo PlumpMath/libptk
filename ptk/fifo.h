@@ -26,6 +26,14 @@ namespace ptk {
       write_position = read_position = storage;
     }
 
+    size_t available() const {
+      if (write_position >= read_position) {
+        return (limit - write_position) + (read_position - storage);
+      } else {
+        return (read_position - write_position) - 1;
+      }
+    }
+
     // number of contiguous elements that can read
     size_t read_capacity() const {
       if (write_position >= read_position) {
