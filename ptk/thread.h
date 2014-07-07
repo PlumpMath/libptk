@@ -3,6 +3,8 @@
 #include "ptk/dqueue.h"
 #include "ptk/timer.h"
 
+#define PTK_DEBUG 1
+
 namespace ptk {
   class Kernel;
   class Semaphore;
@@ -37,8 +39,6 @@ namespace ptk {
     RUNNABLE_STATES = (READY_STATE | YIELDED_STATE | WAIT_COND_STATE)
   };
 
-  const char *thread_state_name(thread_state s);
-
 #define PTK_LABEL_AT_LINE_HELPER(n) PTK_LINE_##n
 #define PTK_LABEL_AT_LINE(n) PTK_LABEL_AT_LINE_HELPER(n)
 #define PTK_HERE PTK_LABEL_AT_LINE(__LINE__)
@@ -47,6 +47,7 @@ namespace ptk {
     friend class Kernel;
     friend class Semaphore;
     friend class Event;
+    friend class ThreadsCommand;
 
     i2link_t registry_link;
     i2link_t ready_link;
@@ -56,20 +57,24 @@ namespace ptk {
     virtual void timer_expired();
     virtual void ptk_end();
 
-#if defined(PTK_DEBUG)
-    const char *file;
-    int line;
-#endif
-
-    void *continuation;
-    thread_state state;
-    wakeup_t wakeup_reason;
-
 
   public:
     Thread();
     virtual ~Thread();
+
+#if defined(PTK_DEBUG)
+    const char *debug_file;
+    int debug_line;
+#endif
+
+    const char *state_name() const;
+    void *continuation;
+    thread_state state;
+    wakeup_t wakeup_reason;
+    Thread *next_registered_thread;
   };
+
+  extern Thread *all_registered_threads;
 
   class SubThread : public Thread {
     friend class Kernel;
@@ -86,8 +91,8 @@ namespace ptk {
 
 #if defined(PTK_DEBUG)
 #define PTK_DEBUG_SAVE()                            \
-  file = __FILE__;                                  \
-  line = __LINE__;
+  debug_file = __FILE__;                            \
+  debug_line = __LINE__;
 #else
 #define PTK_DEBUG_SAVE()
 #endif

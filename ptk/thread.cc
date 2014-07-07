@@ -4,26 +4,35 @@
 
 using namespace ptk;
 
-const char *thread_state_name(thread_state s) {
-  switch (s) {
-#define PTK_THREAD_STATE(name,val) case name##_STATE : return #name;
-    PTK_THREAD_STATES
-#undef PTK_THREAD_STATE
-  default : return "?";
+Thread *ptk::all_registered_threads = 0;
+
+const char *Thread::state_name() const {
+  switch (state) {
+  case INIT_STATE : return "INIT";
+  case READY_STATE : return "READY";
+  case SLEEPING_STATE : return "SLEEP";
+  case WAIT_COND_STATE : return "W_COND";
+  case WAIT_EVENT_STATE : return "W_EVNT";
+  case WAIT_SUBTHREAD_STATE : return "W_THRD";
+  case FINAL_STATE : return "FINAL";
+  case RESET_STATE : return "RESET";
+  default : return "???";
   }
 }
 
 Thread::Thread() :
   Timer(),
 #if defined(PTK_DEBUG)
-  file(""),
-  line(0)
+  debug_file(0),
+  debug_line(0),
 #endif
   continuation(0),
   state(INIT_STATE),
   wakeup_reason(WAKEUP_OK)
 {
   register_thread(*this);
+  next_registered_thread = all_registered_threads;
+  all_registered_threads = this;
 }
 
 Thread::~Thread() {
