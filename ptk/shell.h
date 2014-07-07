@@ -22,25 +22,18 @@ namespace ptk {
    * to point at a valid BaseSequentialStream. Then the run_loop() method
    * should be called in a dedicated thread.
    */
-  class ShellCommand : public SubThread {
-    friend class Shell;
-  protected:
+  struct ShellCommand : public SubThread {
     ShellCommand *next_command;
     const char *name;
 
     void printf(const char *fmt, ...);
 
-  public:
     ShellCommand(const char *name);
     virtual void run() = 0;
+    virtual void help(bool brief = false);
   };
 
   class Shell : public Thread {
-    friend class ShellCommand;
-    static DeviceInStream *in;
-    static OutStream *out;
-    static ShellCommand *commands;
-
     enum {
       MAX_LINE = 60,
       MAX_ARGS = 8
@@ -89,11 +82,14 @@ namespace ptk {
      */
     static void print_keywords(const keyword_t list[], size_t size);
 
-    Shell(DeviceInStream &in, OutStream &out);
+    Shell(DeviceInStream &in, DeviceOutStream &out);
     virtual void run();
 
     static int argc;
     static const char *argv[];
+    static ShellCommand *commands;
+    static DeviceInStream *in;
+    static DeviceOutStream *out;
   };
 
 #if 0

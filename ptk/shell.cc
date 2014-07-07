@@ -6,31 +6,6 @@
 
 using namespace ptk;
 
-class SillyCommand : public ShellCommand {
-public:
-  SillyCommand() : ShellCommand("silly") {
-  }
-
-  virtual void run() {
-    PTK_BEGIN();
-    printf("foobar\r\n");
-    PTK_END();
-  }
-} silly;
-
-
-class SallyCommand : public ShellCommand {
-public:
-  SallyCommand() : ShellCommand("sally") {
-  }
-
-  virtual void run() {
-    PTK_BEGIN();
-    printf("sally foobar\r\n");
-    PTK_END();
-  }
-} sally;
-
 ShellCommand::ShellCommand(const char *name) :
   SubThread(),
   name(name)
@@ -47,13 +22,17 @@ void ShellCommand::printf(const char *fmt, ...) {
   va_end(args);
 }
 
+void ShellCommand::help(bool brief) {
+  Shell::out->printf("%s ...\r\n", name);
+}
+
 DeviceInStream *Shell::in;
-OutStream *Shell::out;
+DeviceOutStream *Shell::out;
 int Shell::argc;
 const char *Shell::argv[MAX_ARGS];
 ShellCommand *Shell::commands;
 
-Shell::Shell(DeviceInStream &in, OutStream &out) :
+Shell::Shell(DeviceInStream &in, DeviceOutStream &out) :
   Thread(),
   line_length(0)
 {
@@ -124,10 +103,11 @@ void Shell::run() {
 
         if (argc > 0) {
           ShellCommand *cmd = find_command(argv[0]);
+
           if (cmd) {
             PTK_WAIT_SUBTHREAD(*cmd, TIME_INFINITE);
           } else {
-            out->puts("unknown command\r\n");
+            out->printf("%s ?\r\n", argv[0]);
           }
         }
       }
@@ -182,3 +162,58 @@ ShellCommand *Shell::find_command(const char *name) {
 
   return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class HelpCommand : public ShellCommand {
+  ShellCommand *cmd;
+
+public:
+  HelpCommand() : ShellCommand("help") {
+  }
+
+  virtual void help(bool brief) {
+    Shell::out->printf("%-10s - %s\r\n", name, "list available commands");
+  }
+
+  virtual void run() {
+    PTK_BEGIN();
+    for (cmd = Shell::commands; cmd; cmd = cmd->next_command) {
+      PTK_WAIT_UNTIL(Shell::out->available() > 16, TIME_INFINITE);
+      cmd->help(true);
+    }
+    PTK_END();
+  }
+} help_command;
+
+class ThreadsCommand : public ShellCommand {
+  Thread *thread;
+
+public:
+  ThreadsCommand() : ShellCommand("threads") {
+  }
+
+  virtual void help(bool brief) {
+    Shell::out->printf("%-10s - %s\r\n", name, "show active protothreads");
+  }
+
+public:
+  virtual void run() {
+    PTK_BEGIN();
+    for (thread = all_registered_threads;
+         thread;
+         thread = thread->next_registered_thread)
+    {
+      if (thread->continuation) {
+        PTK_WAIT_UNTIL(Shell::out->available() > 64, TIME_INFINITE);
+        Shell::out->printf("[%08x] %6s %s:%d\r\n",
+                           thread,
+                           thread->state_name(),
+                           thread->debug_file,
+                           thread->debug_line);
+      }
+    }
+    PTK_END();
+  }
+
+} threads_command;
