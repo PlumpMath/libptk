@@ -44,6 +44,7 @@ namespace ptk {
 
   public:
     DeviceOutStream(uint8_t *fifo_storage, size_t fifo_size);
+    virtual size_t available() const;
     virtual size_t write(const uint8_t *buffer, size_t len);
     virtual bool put(uint8_t ch);
 

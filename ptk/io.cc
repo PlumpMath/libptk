@@ -18,6 +18,10 @@ bool DeviceOutStream::put(uint8_t ch) {
   return write(&ch, 1) == 1;
 }
 
+size_t DeviceOutStream::available() const {
+  return fifo.available();
+}
+
 bool OutStream::puts(const char *str) {
   if (str == 0) return false;
 
