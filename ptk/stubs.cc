@@ -1,5 +1,8 @@
 #include "ptk/assert.h"
+
+#if !defined(PSOC)
 #include "stm32f4xx.h"
+#endif
 
 #if defined(PTK_USE_CC_STUBS)
 
