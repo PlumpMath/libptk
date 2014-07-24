@@ -1,6 +1,7 @@
 #pragma once
 
-void ptk_assert_failure(const char *msg, const char *file, int line);
+extern "C" void ptk_halt(const char *msg);
+extern "C" void ptk_assert_failure(const char *msg, const char *file, int line);
 
 #define PTK_ASSERT_FAILURE(msg,file,line)                       \
   ptk_assert_failure((msg), (file), (line))
