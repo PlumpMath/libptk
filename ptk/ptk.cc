@@ -3,3 +3,5 @@
 #include "ptk/timer.cc"
 #include "ptk/io.cc"
 #include "ptk/shell.cc"
+#include "ptk/assert.cc"
+#include "ptk/stubs.cc"
