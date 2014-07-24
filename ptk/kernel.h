@@ -13,7 +13,6 @@ namespace ptk {
   protected:
     I2List<Thread> ready_list;
     I2List<Timer> armed_timers;
-    I2List<Thread> thread_registry;
     Thread *active_thread;
     volatile int16_t isr_depth;
     volatile int16_t lock_depth;
@@ -47,16 +46,22 @@ namespace ptk {
     void lock();
     void unlock();
     void dump();
+
+    static I2List<Thread> thread_registry;
   };
 
   extern Kernel *the_kernel;
 
   inline void register_thread(Thread &t) {
-    the_kernel->register_thread(t);
+    Kernel::thread_registry.push(t);
   }
 
   inline void unregister_thread(Thread &t) {
-    the_kernel->unregister_thread(t);
+    Kernel::thread_registry.remove(t);
+  }
+
+  inline void expire_timers(uint32_t time_delta) {
+    the_kernel->expire_timers(time_delta);
   }
 
   inline void arm_timer(Timer &t, ptk_time_t when) {

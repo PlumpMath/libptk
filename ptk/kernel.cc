@@ -16,11 +16,11 @@ using namespace ptk;
 #endif
 
 Kernel *ptk::the_kernel = 0;
+I2List<Thread> Kernel::thread_registry(&Thread::registry_link);
 
 Kernel::Kernel() :
 ready_list(&Thread::ready_link),
   armed_timers(&Timer::timer_link),
-  thread_registry(&Thread::registry_link),
   active_thread(0),
   isr_depth(0),
   lock_depth(0)
