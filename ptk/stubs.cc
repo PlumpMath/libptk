@@ -41,10 +41,12 @@ extern "C" {
 
     void *allocated = limit;
 
-    char *stack = (char *) __get_MSP();
-    if (limit + incr > stack) {
+    char *main_stack_pointer = (char *) __get_MSP();
+    if (limit + incr > main_stack_pointer) {
       ptk_halt("out of memory");
     }
+
+    // NOTE: even if we get here, the stack can collide with the heap later on
 
     limit += incr;
     return allocated;
