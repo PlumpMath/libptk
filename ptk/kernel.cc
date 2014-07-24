@@ -16,7 +16,6 @@ using namespace ptk;
 #endif
 
 Kernel *ptk::the_kernel = 0;
-I2List<Thread> Kernel::thread_registry(&Thread::registry_link);
 
 Kernel::Kernel() :
 ready_list(&Thread::ready_link),
@@ -25,14 +24,6 @@ ready_list(&Thread::ready_link),
   isr_depth(0),
   lock_depth(0)
 {}
-
-void Kernel::register_thread(Thread &t) {
-  thread_registry.push(t);
-}
-
-void Kernel::unregister_thread(Thread &t) {
-  thread_registry.remove(t);
-}
 
 void Kernel::schedule(Thread &t) {
   PTK_ASSERT(lock_depth > 0,

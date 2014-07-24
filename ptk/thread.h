@@ -57,7 +57,6 @@ namespace ptk {
     virtual void timer_expired();
     virtual void ptk_end();
 
-
   public:
     Thread();
     virtual ~Thread();

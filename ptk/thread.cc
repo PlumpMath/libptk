@@ -30,13 +30,13 @@ Thread::Thread() :
   state(INIT_STATE),
   wakeup_reason(WAKEUP_OK)
 {
-  register_thread(*this);
   next_registered_thread = all_registered_threads;
   all_registered_threads = this;
 }
 
 Thread::~Thread() {
-  unregister_thread(*this);
+  // need to remove this thread from the all_registered_threads list
+  ptk_halt("dangling thread");
 }
 
 void Thread::timer_expired() {

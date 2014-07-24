@@ -47,18 +47,9 @@ namespace ptk {
     void unlock();
     void dump();
 
-    static I2List<Thread> thread_registry;
   };
 
   extern Kernel *the_kernel;
-
-  inline void register_thread(Thread &t) {
-    Kernel::thread_registry.push(t);
-  }
-
-  inline void unregister_thread(Thread &t) {
-    Kernel::thread_registry.remove(t);
-  }
 
   inline void expire_timers(uint32_t time_delta) {
     the_kernel->expire_timers(time_delta);
