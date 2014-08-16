@@ -1,6 +1,6 @@
 #include "ptk/assert.h"
 
-#if !defined(PSOC)
+#if defined(PTK_STM32F4XX)
 #include "stm32f4xx.h"
 #endif
 
@@ -36,15 +36,22 @@ extern "C" {
     (void) id;
   }
 
+#if defined(PTK_TM4C)
+#define BSS_END_SYMBOL _ebss
+#endif
+
   void *_sbrk(int incr) {
-    extern unsigned long _bss_end; // Defined by the linker
+    extern unsigned long BSS_END_SYMBOL; // Defined by the linker
     static char *limit = 0;
 
-    if (limit == 0) limit = (char *) &_bss_end;
+    if (limit == 0) limit = (char *) &BSS_END_SYMBOL;
 
     void *allocated = limit;
+    char *main_stack_pointer;
 
-    char *main_stack_pointer = (char *) __get_MSP();
+    // this should work on any ARM Cortex
+    asm volatile ("mov %[out], sp" : [out] "=r" (main_stack_pointer));
+
     if (limit + incr > main_stack_pointer) {
       ptk_halt("out of memory");
     }
