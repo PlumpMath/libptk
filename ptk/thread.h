@@ -182,27 +182,19 @@ namespace ptk {
 
 #define PTK_WAIT_UNTIL(condition,duration)          \
   do {                                              \
-  PTK_HERE: ;                                       \
-    ptk_time_t duration_temp = (duration);          \
-    continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
-    if (duration_temp == TIME_INFINITE) {           \
+    lock_kernel();                                  \
+    arm_timer(*this, duration);                     \
+    state = WAIT_COND_STATE;                        \
+    unlock_kernel();                                \
+  PTK_HERE: PTK_DEBUG_SAVE();                       \
+    if (state == WAIT_COND_STATE) {   \
       if (!(condition)) {                           \
-        state = WAIT_COND_STATE;                    \
-        return;                                     \
-      }                                             \
-    } else {                                        \
-      if (!(condition)) {                           \
-        if (timer_expiration == TIME_NEVER) {       \
-          lock_kernel();                            \
-          arm_timer(*this, duration_temp);          \
-          unlock_kernel();                          \
-        }                                           \
-        state = WAIT_COND_STATE;                    \
+        continuation = &&PTK_HERE;                  \
         return;                                     \
       } else {                                      \
         lock_kernel();                              \
         disarm_timer(*this);                        \
+        state = READY_STATE;                        \
         unlock_kernel();                            \
       }                                             \
     }                                               \

@@ -42,7 +42,8 @@ Thread::~Thread() {
 void Thread::timer_expired() {
   lock_from_isr();
   wakeup_reason = WAKEUP_TIMEOUT;
-  timer_expiration = TIME_EXPIRED;
+  timer_expiration = TIME_NEVER;
+  state = READY_STATE;
   schedule_thread(*this);
   unlock_from_isr();
 }

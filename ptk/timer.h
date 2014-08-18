@@ -16,8 +16,7 @@ namespace ptk {
    */
   enum {
     TIME_IMMEDIATE = 0,
-    TIME_INFINITE  = (unsigned) -3,
-    TIME_EXPIRED   = (unsigned) -2,
+    TIME_INFINITE  = (unsigned) -2,
     TIME_NEVER     = (unsigned) -1,
   };
 
