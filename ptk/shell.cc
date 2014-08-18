@@ -179,7 +179,8 @@ public:
   virtual void run() {
     PTK_BEGIN();
     for (cmd = Shell::commands; cmd; cmd = cmd->next_command) {
-      PTK_WAIT_UNTIL(Shell::out->available() > 16, TIME_INFINITE);
+      // wait a bit until there's (hopefully) room in the output buffer
+      PTK_WAIT_UNTIL(Shell::out->available() > 16, 100);
       cmd->help(true);
     }
     PTK_END();
@@ -205,7 +206,8 @@ public:
          thread = thread->next_registered_thread)
     {
       if (thread->continuation) {
-        PTK_WAIT_UNTIL(Shell::out->available() > 64, TIME_INFINITE);
+        // wait a bit until there's (hopefully) room in the output buffer
+        PTK_WAIT_UNTIL(Shell::out->available() > 64, 100);
         Shell::out->printf("[%08x] %6s %s:%d\r\n",
                            thread,
                            thread->state_name(),
