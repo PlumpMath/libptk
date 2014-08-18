@@ -68,8 +68,11 @@ void Kernel::lock() {
   PTK_ASSERT(lock_depth >= 0,
              "Negative lock_depth. Kernel::unlock() called without\n"
              "matching Kernel::lock().");
+  PTK_ASSERT(lock_depth < 1,
+             "Kernel::lock() called while already locked.");
   PTK_PORT_DISABLE_INTERRUPTS;
   lock_depth++;
+
 }
 
 void Kernel::unlock() {
@@ -91,6 +94,8 @@ void Kernel::lock_from_isr() {
   PTK_ASSERT(lock_depth >= 0,
              "Negative lock_depth. Kernel::unlock_from_isr() called without\n"
              "matching Kernel::lock_from_isr().");
+  PTK_ASSERT(lock_depth < 1,
+             "Kernel::lock_from_isr() called while already locked.");
   PTK_PORT_DISABLE_INTERRUPTS;
   lock_depth++;
 }
