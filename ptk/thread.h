@@ -118,8 +118,8 @@ namespace ptk {
     unschedule_thread(*this);                       \
     arm_timer(*this, (duration));                   \
     continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
     unlock_kernel();                                \
+    PTK_DEBUG_SAVE();                               \
     return;                                         \
   PTK_HERE: ;                                       \
   } while (0)                                        
@@ -128,8 +128,8 @@ namespace ptk {
   do {                                              \
     wait_event(*this, event, duration);             \
     continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
     state = WAIT_EVENT_STATE;                       \
+    PTK_DEBUG_SAVE();                               \
     return;                                         \
   PTK_HERE: ;                                       \
     lock_kernel();                                  \
@@ -141,9 +141,9 @@ namespace ptk {
   do {                                              \
     wait_event(*this, event, duration);             \
     continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
     state = WAIT_EVENT_STATE;                       \
     unlock_kernel();                                \
+    PTK_DEBUG_SAVE();                               \
     return;                                         \
   PTK_HERE: ;                                       \
     lock_kernel();                                  \
@@ -156,9 +156,9 @@ namespace ptk {
     lock_kernel();                                  \
     wait_subthread(*this, sub, duration);           \
     continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
     state = WAIT_SUBTHREAD_STATE;                   \
     unlock_kernel();                                \
+    PTK_DEBUG_SAVE();                               \
     return;                                         \
   PTK_HERE: ;                                       \
     lock_kernel();                                  \
@@ -170,9 +170,9 @@ namespace ptk {
   do {                                              \
     wait_subthread(*this, sub, duration);           \
     continuation = &&PTK_HERE;                      \
-    PTK_DEBUG_SAVE();                               \
     state = WAIT_SUBTHREAD_STATE;                   \
     unlock_kernel();                                \
+    PTK_DEBUG_SAVE();                               \
     return;                                         \
   PTK_HERE: ;                                       \
     lock_kernel();                                  \
@@ -186,10 +186,11 @@ namespace ptk {
     arm_timer(*this, duration);                     \
     state = WAIT_COND_STATE;                        \
     unlock_kernel();                                \
-  PTK_HERE: PTK_DEBUG_SAVE();                       \
+  PTK_HERE: ;                                       \
     if (state == WAIT_COND_STATE) {   \
       if (!(condition)) {                           \
         continuation = &&PTK_HERE;                  \
+        PTK_DEBUG_SAVE();                           \
         return;                                     \
       } else {                                      \
         lock_kernel();                              \
