@@ -31,6 +31,14 @@ namespace ptk {
     ShellCommand(const char *name);
     virtual void run() = 0;
     virtual void help(bool brief = false);
+
+    /**
+     * @brief Utility function for parsing parsing shell arguments
+     */
+    template<class T>
+    bool parse_number(const char *str, T &out);
+
+    bool parse_bool(const char *str, bool &out);
   };
 
   class Shell : public Thread {

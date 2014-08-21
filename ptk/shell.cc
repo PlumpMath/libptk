@@ -26,6 +26,59 @@ void ShellCommand::help(bool brief) {
   Shell::out->printf("%s ...\r\n", name);
 }
 
+
+
+template<class T>
+bool ShellCommand::parse_number(const char *str, T &out) {
+  unsigned int hex;
+  int dec, count;
+
+  if (str[0] == '0' && str[1] == 'x') {
+    if ((count = sscanf(str + 2, "%x", &hex))) {
+      out = hex;
+      return true;
+    }
+  }
+
+  if ((count = sscanf(str, "%d", &dec))) {
+    out = dec;
+    return true;
+  }
+
+  return false;
+}
+
+template bool ShellCommand::parse_number(const char *str, uint16_t &out);
+template bool ShellCommand::parse_number(const char *str, int16_t &out);
+template bool ShellCommand::parse_number(const char *str, uint8_t &out);
+template bool ShellCommand::parse_number(const char *str, int &out);
+
+bool ShellCommand::parse_bool(const char *str, bool &out) {
+  static const Shell::keyword_t booleans[] = {
+    { "true",  0, 1 },
+    { "on",    0, 1 },
+    { "yes",   0, 1 },
+    { "1",     0, 1 },
+
+    { "false", 0, 0 },
+    { "off",   0, 0 },
+    { "no",    0, 0 },
+    { "0",     0, 0 },
+  };
+
+  int value;
+
+  if ((value = Shell::lookup_keyword(str, booleans, sizeof booleans)) >= 0) {
+    out = (bool) value;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
+
+
 DeviceInStream *Shell::in;
 DeviceOutStream *Shell::out;
 int Shell::argc;
