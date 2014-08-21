@@ -132,8 +132,10 @@ void Kernel::leave_isr() {
 void Kernel::arm_timer(Timer &t, ptk_time_t when) {
   PTK_ASSERT(t.timer_expiration == TIME_NEVER,
              "Attempt to arm a Timer that is already armed.");
-  t.timer_expiration = when;
-  armed_timers.push(t);
+  if (when < TIME_INFINITE) {
+    t.timer_expiration = when;
+    armed_timers.push(t);
+  }
 }
 
 void Kernel::disarm_timer(Timer &t) {
