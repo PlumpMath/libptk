@@ -10,23 +10,21 @@ ShellCommand::ShellCommand(const char *name) :
   SubThread(),
   name(name)
 {
-  next_command = Shell::commands;
-  Shell::commands = this;
+  next_command = ShellCommand::commands;
+  ShellCommand::commands = this;
 }
 
 void ShellCommand::printf(const char *fmt, ...) {
   va_list args;
 
   va_start(args, fmt);
-  Shell::out->vprintf(fmt, args);
+  out->vprintf(fmt, args);
   va_end(args);
 }
 
 void ShellCommand::help(bool brief) {
-  Shell::out->printf("%s ...\r\n", name);
+  out->printf("%s ...\r\n", name);
 }
-
-
 
 template<class T>
 bool ShellCommand::parse_number(const char *str, T &out) {
@@ -76,21 +74,18 @@ bool ShellCommand::parse_bool(const char *str, bool &out) {
   }
 }
 
-
-
-
-DeviceInStream *Shell::in;
-DeviceOutStream *Shell::out;
-int Shell::argc;
-const char *Shell::argv[MAX_ARGS];
-ShellCommand *Shell::commands;
+DeviceInStream *ShellCommand::in;
+DeviceOutStream *ShellCommand::out;
+int ShellCommand::argc;
+const char *ShellCommand::argv[Shell::MAX_ARGS];
+ShellCommand *ShellCommand::commands;
 
 Shell::Shell(DeviceInStream &in, DeviceOutStream &out) :
   Thread(),
   line_length(0)
 {
-  Shell::in = &in;
-  Shell::out = &out;
+  ShellCommand::in = &in;
+  ShellCommand::out = &out;
 }
 
 void Shell::run() {
@@ -98,16 +93,16 @@ void Shell::run() {
 
   while (1) {
     // BUG: why doesn't the first prompt appear?
-    out->puts("> ");
+    ShellCommand::out->puts("> ");
 
     line_length = 0;
     line_complete = false;
 
     while (!line_complete) {
-      PTK_WAIT_EVENT(in->not_empty, TIME_INFINITE);
+      PTK_WAIT_EVENT(ShellCommand::in->not_empty, TIME_INFINITE);
 
       uint8_t c;
-      while (!line_complete && in->get(c)) {
+      while (!line_complete && ShellCommand::in->get(c)) {
         if (line_length == MAX_LINE-1) {
           line_complete = true;
           break;
@@ -115,7 +110,7 @@ void Shell::run() {
 
         switch (c) {
         case 0x04 : // ctrl-D
-          out->puts("^D");
+          ShellCommand::out->puts("^D");
           line[line_length] = 0;
           line_complete = true;
           break;
@@ -123,18 +118,18 @@ void Shell::run() {
         case 0x7f : // delete
         case 0x08 : // ctrl-H
           if (line_length > 0) {
-            out->puts("\010 \010");
+            ShellCommand::out->puts("\010 \010");
             line_length--;
           }
           break;
 
         case 0x15 : // ctrl-U
-          out->puts("^U\r\n> ");
+          ShellCommand::out->puts("^U\r\n> ");
           line[line_length=0] = 0;
           break;
 
         case '\r' :
-          out->puts("\r\n");
+          ShellCommand::out->puts("\r\n");
           line[line_length] = 0;
           line_complete = true;
           break;
@@ -145,7 +140,7 @@ void Shell::run() {
           }
 
           if (line_length >= MAX_LINE-1) continue;
-          out->put(c);
+          ShellCommand::out->put(c);
           line[line_length++] = c;
           break;
         }
@@ -154,13 +149,13 @@ void Shell::run() {
       if (line_complete) {
         parse_line();
 
-        if (argc > 0) {
-          ShellCommand *cmd = find_command(argv[0]);
+        if (ShellCommand::argc > 0) {
+          ShellCommand *cmd = ShellCommand::find_command(ShellCommand::argv[0]);
 
           if (cmd) {
             PTK_WAIT_SUBTHREAD(*cmd, TIME_INFINITE);
           } else {
-            out->printf("%s ?\r\n", argv[0]);
+            ShellCommand::out->printf("%s ?\r\n", ShellCommand::argv[0]);
           }
         }
       }
@@ -172,11 +167,11 @@ void Shell::run() {
 
 void Shell::parse_line() {
   unsigned int i=0;
-  argc = 0;
+  ShellCommand::argc = 0;
 
-  while (i < line_length && argc < MAX_ARGS) {
+  while (i < line_length && ShellCommand::argc < MAX_ARGS) {
     // start argument word
-    argv[argc++] = &line[i];
+    ShellCommand::argv[ShellCommand::argc++] = &line[i];
     while (i < line_length && !std::isspace(line[i])) i++;
     line[i++] = 0;
 
@@ -202,11 +197,12 @@ void Shell::print_keywords(const keyword_t list[], size_t size) {
   size /= sizeof(keyword_t);
 
   for (unsigned i=0; i < size; ++i) {
-    out->printf("  %-8s  -- %s\r\n", list[i].name, list[i].description);
+    ShellCommand::out->printf("  %-8s  -- %s\r\n", list[i].name,
+                              list[i].description);
   }
 }
 
-ShellCommand *Shell::find_command(const char *name) {
+ShellCommand *ShellCommand::find_command(const char *name) {
   if (!strcmp(name, "?")) name = "help";
 
   for (ShellCommand *cmd = commands; cmd; cmd = cmd->next_command) {
@@ -226,14 +222,14 @@ public:
   }
 
   virtual void help(bool brief) {
-    Shell::out->printf("%-10s - %s\r\n", name, "list available commands");
+    printf("%-10s - %s\r\n", name, "list available commands");
   }
 
   virtual void run() {
     PTK_BEGIN();
-    for (cmd = Shell::commands; cmd; cmd = cmd->next_command) {
+    for (cmd = commands; cmd; cmd = cmd->next_command) {
       // wait a bit until there's (hopefully) room in the output buffer
-      PTK_WAIT_UNTIL(Shell::out->available() > 16, 10);
+      PTK_WAIT_UNTIL(ShellCommand::out->available() > 16, 10);
       cmd->help(true);
     }
     PTK_END();
@@ -248,7 +244,7 @@ public:
   }
 
   virtual void help(bool brief) {
-    Shell::out->printf("%-10s - %s\r\n", name, "show active protothreads");
+    printf("%-10s - %s\r\n", name, "show active protothreads");
   }
 
 public:
@@ -260,12 +256,12 @@ public:
     {
       if (thread->continuation) {
         // wait a bit until there's (hopefully) room in the output buffer
-        PTK_WAIT_UNTIL(Shell::out->available() > 64, 10);
-        Shell::out->printf("[%08x] %6s %s:%d\r\n",
-                           thread,
-                           thread->state_name(),
-                           thread->debug_file,
-                           thread->debug_line);
+        PTK_WAIT_UNTIL(ShellCommand::out->available() > 64, 10);
+        printf("[%08x] %6s %s:%d\r\n",
+               thread,
+               thread->state_name(),
+               thread->debug_file,
+               thread->debug_line);
       }
     }
     PTK_END();
