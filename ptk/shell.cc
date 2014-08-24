@@ -57,11 +57,13 @@ bool ShellCommand::parse_bool(const char *str, bool &out) {
     { "on",    0, 1 },
     { "yes",   0, 1 },
     { "1",     0, 1 },
+    { "high",  0, 1 },
 
     { "false", 0, 0 },
     { "off",   0, 0 },
     { "no",    0, 0 },
     { "0",     0, 0 },
+    { "low",   0, 0 },
   };
 
   int value;
