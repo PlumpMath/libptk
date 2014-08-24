@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ptk_conf.h"
+#include "conf_ptk.h"
 
 #include "ptk/timer.h"
 #include "ptk/kernel.h"
